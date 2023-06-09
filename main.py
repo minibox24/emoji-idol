@@ -101,4 +101,30 @@ async def emoji(ctx: commands.Context):
         traceback.print_exc()
 
 
+@bot.command("스티커")
+@commands.has_guild_permissions(administrator=True)
+async def sticker(ctx: commands.Context):
+    msg = await ctx.reply("잠시만 기다려 주세요!")
+
+    try:
+        stickers = ctx.guild.stickers
+
+        zip_buffer = await load_images(
+            [
+                {
+                    "url": sticker.url,
+                    "name": sticker.name,
+                    "ext": sticker.format.file_extension,
+                }
+                for sticker in stickers
+            ]
+        )
+
+        await ctx.send(file=discord.File(zip_buffer, "stickers.zip"))
+        await msg.delete()
+    except:
+        await msg.edit(content="오류가 발생했습니다!")
+        traceback.print_exc()
+
+
 bot.run(os.getenv("TOKEN"))
