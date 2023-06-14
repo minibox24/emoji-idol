@@ -24,6 +24,10 @@ async def on_ready():
 
 @bot.listen("on_message")
 async def on_message(message: discord.Message):
+    # 고독한이모지 채널
+    if message.channel.id != 1099610870989987870:
+        return
+
     if not isinstance(message.author, discord.Member):
         return
 
