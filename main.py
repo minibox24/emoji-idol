@@ -21,30 +21,33 @@ now_wakpiece = None
 async def upload_wakpiece():
     global now_wakpiece
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            "https://api.wakscord.xyz/wakschedule", allow_redirects=False
-        ) as response:
-            location = response.headers["Location"]
-            idx = response.headers["Index"]
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.wakscord.xyz/wakschedule", allow_redirects=False
+            ) as response:
+                location = response.headers["Location"]
+                idx = response.headers["Index"]
 
-        if location == now_wakpiece:
-            return
+            if location == now_wakpiece:
+                return
 
-        now_wakpiece = location
-        image = BytesIO()
+            now_wakpiece = location
+            image = BytesIO()
 
-        async with session.get(location) as response:
-            image.write(await response.read())
+            async with session.get(location) as response:
+                image.write(await response.read())
 
-        image.seek(0)
+            image.seek(0)
 
-        channel = bot.get_channel(1131569030923300864)
+            channel = bot.get_channel(1131569030923300864)
 
-        await channel.send(
-            f"https://cafe.naver.com/steamindiegame/{idx}",
-            file=discord.File(image, "wakpiece.png"),
-        )
+            await channel.send(
+                f"https://cafe.naver.com/steamindiegame/{idx}",
+                file=discord.File(image, "wakpiece.png"),
+            )
+    except:
+        traceback.print_exc()
 
 
 @bot.event
