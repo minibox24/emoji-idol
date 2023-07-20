@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 now_wakpiece = None
 
 
-@tasks.loop(minutes=1)
+@tasks.loop(minutes=10)
 async def upload_wakpiece():
     global now_wakpiece
 
