@@ -104,7 +104,7 @@ async def upload_wakpiece():
                                 "icon_url": icon,
                             },
                             "color": COLORS[member],
-                            "description": f"# {member}: **__{detail['status']}__**\n\n{info}",
+                            "description": f"# **__{detail['status']}__**\n\n{info}",
                         }
                     ],
                 }
