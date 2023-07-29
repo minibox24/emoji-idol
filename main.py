@@ -18,10 +18,7 @@ load_dotenv()
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 now_wakpiece = None
-now_bangon = {
-    "status": None,
-    "message": None,
-}
+now_bangon = {}
 
 
 async def send_webhook(data: dict, file: BytesIO | None = None):
@@ -96,23 +93,26 @@ async def upload_wakpiece():
                 detail = data["members"][member]
                 info = "\n".join(detail["info"])
 
-                await send_webhook(
-                    {
-                        "username": f"{member} 뱅온정보",
-                        "avatar_url": f"https://api.wakscord.xyz/avatar/{AVATARS[member]}",
-                        "embeds": [
-                            {
-                                "author": {
-                                    "name": f"{date} {name}",
-                                    "url": f"https://cafe.naver.com/steamindiegame/{idx}",
-                                    "icon_url": icon,
-                                },
-                                "color": COLORS[member],
-                                "description": f"# {member}: **__{detail['status']}__**\n\n{info}",
-                            }
-                        ],
-                    }
-                )
+                send_data = {
+                    "username": f"{member} 뱅온정보",
+                    "avatar_url": f"https://api.wakscord.xyz/avatar/{AVATARS[member]}",
+                    "embeds": [
+                        {
+                            "author": {
+                                "name": f"{date} {name}",
+                                "url": f"https://cafe.naver.com/steamindiegame/{idx}",
+                                "icon_url": icon,
+                            },
+                            "color": COLORS[member],
+                            "description": f"# {member}: **__{detail['status']}__**\n\n{info}",
+                        }
+                    ],
+                }
+
+                if now_bangon.get(member) != send_data:
+                    await send_webhook(send_data)
+
+                now_bangon[member] = send_data
 
             # endregion
     except:
