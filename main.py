@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import re
 import traceback
@@ -10,11 +11,33 @@ import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
+from constants import *
+
 load_dotenv()
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 now_wakpiece = None
+now_bangon = {
+    "status": None,
+    "message": None,
+}
+
+
+async def send_webhook(data: dict, file: BytesIO | None = None):
+    form = aiohttp.FormData()
+
+    form.add_field(
+        "payload_json",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    if file:
+        form.add_field("file", file, filename="image.png", content_type="image/png")
+
+    async with aiohttp.ClientSession() as session:
+        await session.post(os.getenv("HOOK"), data=form)
 
 
 @tasks.loop(minutes=10)
@@ -23,6 +46,8 @@ async def upload_wakpiece():
 
     try:
         async with aiohttp.ClientSession() as session:
+            # region 왁피스
+
             async with session.get(
                 "https://api.wakscord.xyz/wakschedule", allow_redirects=False
             ) as response:
@@ -40,12 +65,56 @@ async def upload_wakpiece():
 
             image.seek(0)
 
-            channel = bot.get_channel(1131569030923300864)
-
-            await channel.send(
-                f"https://cafe.naver.com/steamindiegame/{idx}",
-                file=discord.File(image, "wakpiece.png"),
+            await send_webhook(
+                {
+                    "username": "왁피스 일기장",
+                    "avatar_url": WAKPIECE,
+                    "content": f"https://cafe.naver.com/steamindiegame/{idx}",
+                },
+                image,
             )
+
+            # endregion
+
+            # region 뱅온정보
+
+            async with session.get("https://api.wakscord.xyz/bangon") as response:
+                data = await response.json()
+
+            for member in data["members"]:
+                if member == "우왁굳":
+                    icon = WAKPIECE
+                    name = "왁피스 일기장"
+                    idx = data["info"]["wakIdx"]
+                    date = data["info"]["wakDate"]
+                else:
+                    icon = BANGON
+                    name = "이세돌 뱅온정보"
+                    idx = data["info"]["idx"]
+                    date = data["info"]["date"]
+
+                detail = data["members"][member]
+                info = "\n".join(detail["info"])
+
+                await send_webhook(
+                    {
+                        "username": f"{member} 뱅온정보",
+                        "avatar_url": f"https://api.wakscord.xyz/avatar/{AVATARS[member]}",
+                        "embeds": [
+                            {
+                                "author": {
+                                    "name": f"{date} {name}",
+                                    "url": f"https://cafe.naver.com/steamindiegame/{idx}",
+                                    "icon_url": icon,
+                                },
+                                "color": COLORS[member],
+                                "description": f"# {member}: **__{detail['status']}__**\n\n{info}",
+                            }
+                        ],
+                    }
+                )
+
+            # endregion
     except:
         traceback.print_exc()
 
