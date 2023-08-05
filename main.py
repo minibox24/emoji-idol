@@ -51,25 +51,23 @@ async def upload_wakpiece():
                 location = response.headers["Location"]
                 idx = response.headers["Index"]
 
-            if location == now_wakpiece:
-                return
+            if location != now_wakpiece:
+                now_wakpiece = location
+                image = BytesIO()
 
-            now_wakpiece = location
-            image = BytesIO()
+                async with session.get(location) as response:
+                    image.write(await response.read())
 
-            async with session.get(location) as response:
-                image.write(await response.read())
+                image.seek(0)
 
-            image.seek(0)
-
-            await send_webhook(
-                {
-                    "username": "왁피스 일기장",
-                    "avatar_url": WAKPIECE,
-                    "content": f"https://cafe.naver.com/steamindiegame/{idx}",
-                },
-                image,
-            )
+                await send_webhook(
+                    {
+                        "username": "왁피스 일기장",
+                        "avatar_url": WAKPIECE,
+                        "content": f"https://cafe.naver.com/steamindiegame/{idx}",
+                    },
+                    image,
+                )
 
             # endregion
 
