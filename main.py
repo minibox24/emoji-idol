@@ -12,8 +12,10 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from constants import *
+from database import get_user_count, set_user_count
 
 load_dotenv()
+
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -22,6 +24,8 @@ now_bangon = {}
 
 
 async def send_webhook(data: dict, file: BytesIO | None = None):
+    return
+
     form = aiohttp.FormData()
 
     form.add_field(
@@ -37,7 +41,7 @@ async def send_webhook(data: dict, file: BytesIO | None = None):
         await session.post(os.getenv("HOOK"), data=form)
 
 
-@tasks.loop(minutes=10)
+@tasks.loop(minutes=5)
 async def upload_wakpiece():
     global now_wakpiece
 
@@ -135,12 +139,25 @@ async def on_message(message: discord.Message):
     if not isinstance(message.author, discord.Member):
         return
 
-    if message.author.guild_permissions.administrator:
-        return
-
     if message.content:
         if not re.match(r"^(\s|<a?:\w+:\d+>)+$", message.content):
-            await message.delete()
+            if not message.author.guild_permissions.administrator:
+                return await message.delete()
+
+    count = await get_user_count(message.author.id)
+    count += 1
+
+    await set_user_count(message.author.id, count)
+
+    role = None
+
+    for need, role_id in LEVELS:
+        if count >= need:
+            role = message.guild.get_role(role_id)
+
+    if role not in message.author.roles:
+        await message.author.add_roles(role)
+        await message.add_reaction("🎉")
 
 
 def list_chunk(lst, n):
