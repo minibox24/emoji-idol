@@ -24,8 +24,6 @@ now_bangon = {}
 
 
 async def send_webhook(data: dict, file: BytesIO | None = None):
-    return
-
     form = aiohttp.FormData()
 
     form.add_field(
