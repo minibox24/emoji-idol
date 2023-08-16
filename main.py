@@ -140,6 +140,9 @@ async def on_message(message: discord.Message):
     if message.content:
         if not re.match(r"^(\s|<a?:\w+:\d+>)+$", message.content):
             if not message.author.guild_permissions.administrator:
+                c = bot.get_channel(1141324762098966598)
+                await c.send(f"{message.author.mention}: {message.content}")
+
                 return await message.delete()
 
     count = await get_user_count(message.author.id)
@@ -170,6 +173,9 @@ async def on_message_edit(_: discord.Message, after: discord.Message):
     if after.content:
         if not re.match(r"^(\s|<a?:\w+:\d+>)+$", after.content):
             if not after.author.guild_permissions.administrator:
+                c = bot.get_channel(1141324762098966598)
+                await c.send(f"{after.author.mention}: {after.content}")
+
                 return await after.delete()
 
 
