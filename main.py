@@ -158,6 +158,21 @@ async def on_message(message: discord.Message):
         await message.add_reaction("🎉")
 
 
+@bot.listen("on_message_edit")
+async def on_message_edit(_: discord.Message, after: discord.Message):
+    # 고독한이모지 채널
+    if after.channel.id != 1099610870989987870:
+        return
+
+    if not isinstance(after.author, discord.Member):
+        return
+
+    if after.content:
+        if not re.match(r"^(\s|<a?:\w+:\d+>)+$", after.content):
+            if not after.author.guild_permissions.administrator:
+                return await after.delete()
+
+
 def list_chunk(lst, n):
     return [lst[i : i + n] for i in range(0, len(lst), n)]
 
