@@ -109,10 +109,11 @@ async def upload_wakpiece():
                     ],
                 }
 
-                if now_bangon.get(member) != send_data and not detail["status"]:
-                    await send_webhook(send_data)
+                if now_bangon.get(member) != send_data:
+                    if detail["status"]:
+                        await send_webhook(send_data)
 
-                    now_bangon[member] = send_data
+                        now_bangon[member] = send_data
 
             # endregion
     except:
