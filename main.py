@@ -151,15 +151,16 @@ async def on_message(message: discord.Message):
 
     await set_user_count(message.author.id, count)
 
-    role = None
+    roles = []
 
     for need, role_id in LEVELS:
         if count >= need:
-            role = message.guild.get_role(role_id)
+            roles.append(message.guild.get_role(role_id))
 
-    if role not in message.author.roles:
-        await message.author.add_roles(role)
-        await message.add_reaction("🎉")
+    for role in roles:
+        if role not in message.author.roles:
+            await message.author.add_roles(role)
+            await message.add_reaction("🎉")
 
 
 @bot.listen("on_message_edit")
