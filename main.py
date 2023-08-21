@@ -12,7 +12,7 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from constants import *
-from database import get_user_count, set_user_count
+from database import get_user_count, get_users, is_noticed, set_noticed, set_user_count
 
 load_dotenv()
 
@@ -62,14 +62,17 @@ async def upload_wakpiece():
 
                 image.seek(0)
 
-                await send_webhook(
-                    {
-                        "username": "왁피스 일기장",
-                        "avatar_url": WAKPIECE,
-                        "content": f"https://cafe.naver.com/steamindiegame/{idx}",
-                    },
-                    image,
-                )
+                if not await is_noticed(location):
+                    await send_webhook(
+                        {
+                            "username": "왁피스 일기장",
+                            "avatar_url": WAKPIECE,
+                            "content": f"https://cafe.naver.com/steamindiegame/{idx}",
+                        },
+                        image,
+                    )
+
+                    await set_noticed(location)
 
             # endregion
 
@@ -110,10 +113,11 @@ async def upload_wakpiece():
                 }
 
                 if now_bangon.get(member) != send_data:
-                    if detail["status"]:
+                    if detail["status"] and not await is_noticed(send_data):
                         await send_webhook(send_data)
 
                         now_bangon[member] = send_data
+                        await set_noticed(send_data)
 
             # endregion
     except:
@@ -271,6 +275,17 @@ async def sticker(ctx: commands.Context):
     except:
         await msg.edit(content="오류가 발생했습니다!")
         traceback.print_exc()
+
+
+@bot.command("랭킹")
+@commands.has_guild_permissions(administrator=True)
+async def rank(ctx: commands.Context):
+    users = await get_users()
+    text = "\n".join(
+        [f"{idx + 1}. <@{user[0]}>: {user[1]}개" for idx, user in enumerate(users)]
+    )
+
+    await ctx.send(text, allowed_mentions=discord.AllowedMentions.none())
 
 
 bot.run(os.getenv("TOKEN"))
