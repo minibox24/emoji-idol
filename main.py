@@ -282,7 +282,7 @@ async def sticker(ctx: commands.Context):
 async def rank(ctx: commands.Context):
     users = await get_users()
     text = "\n".join(
-        [f"{idx + 1}. <@{user[0]}>: {user[1]}개" for idx, user in enumerate(users)]
+        [f"{idx + 1}. <@{user[0]}>: {user[1]}개" for idx, user in enumerate(users)][:15]
     )
 
     await ctx.send(text, allowed_mentions=discord.AllowedMentions.none())
