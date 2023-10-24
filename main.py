@@ -112,15 +112,6 @@ async def upload_wakpiece():
                     ],
                 }
 
-                if member != "우왁굳":
-                    send_data["embeds"].append(
-                        {
-                            "color": 0xFD958A,
-                            "title": "뱅온정보 설문조사",
-                            "url": "https://forms.gle/g9eWgVTAePKhc9um8",
-                        }
-                    )
-
                 if now_bangon.get(member) != send_data:
                     if detail["status"] and not await is_noticed(send_data):
                         await send_webhook(send_data)
