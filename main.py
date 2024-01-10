@@ -135,9 +135,12 @@ async def on_ready():
 
 @bot.listen("on_message")
 async def on_message(message: discord.Message):
-    # 고독한이모지 채널
-    if message.channel.id != 1099610870989987870:
+    if message.channel.id not in CHANNELS:
         return
+
+    admin_channel_id = CHANNELS[message.channel.id]["admin"]
+    server_id = CHANNELS[message.channel.id]["id"]
+    levels = CHANNELS[message.channel.id]["levels"]
 
     if not isinstance(message.author, discord.Member):
         return
@@ -145,19 +148,19 @@ async def on_message(message: discord.Message):
     if message.content:
         if not re.match(r"^(\s|<a?:\w+:\d+>)+$", message.content):
             if not message.author.guild_permissions.administrator:
-                c = bot.get_channel(1141324762098966598)
+                c = bot.get_channel(admin_channel_id)
                 await c.send(f"{message.author.mention}: {message.content}")
 
                 return await message.delete()
 
-    count = await get_user_count(message.author.id)
+    count = await get_user_count(message.author.id, server_id)
     count += 1
 
-    await set_user_count(message.author.id, count)
+    await set_user_count(message.author.id, count, server_id)
 
     roles = []
 
-    for need, role_id in LEVELS:
+    for need, role_id in zip(LEVELS, levels):
         if count >= need:
             roles.append(message.guild.get_role(role_id))
 
@@ -169,9 +172,10 @@ async def on_message(message: discord.Message):
 
 @bot.listen("on_message_edit")
 async def on_message_edit(_: discord.Message, after: discord.Message):
-    # 고독한이모지 채널
-    if after.channel.id != 1099610870989987870:
+    if after.channel.id not in CHANNELS:
         return
+
+    admin_channel_id = CHANNELS[after.channel.id]["admin"]
 
     if not isinstance(after.author, discord.Member):
         return
@@ -179,7 +183,7 @@ async def on_message_edit(_: discord.Message, after: discord.Message):
     if after.content:
         if not re.match(r"^(\s|<a?:\w+:\d+>)+$", after.content):
             if not after.author.guild_permissions.administrator:
-                c = bot.get_channel(1141324762098966598)
+                c = bot.get_channel(admin_channel_id)
                 await c.send(f"{after.author.mention}: {after.content}")
 
                 return await after.delete()

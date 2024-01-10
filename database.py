@@ -14,7 +14,9 @@ async def get_db() -> aiosqlite.Connection:
     await db.execute(
         """
         CREATE TABLE IF NOT EXISTS level (
-            user_id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            server INTEGER NOT NULL,
             count INTEGER NOT NULL DEFAULT 0
         )
         """
@@ -32,14 +34,14 @@ async def get_db() -> aiosqlite.Connection:
     return db
 
 
-async def get_user_count(user_id: int) -> int:
+async def get_user_count(user_id: int, server: int) -> int:
     db = await get_db()
 
     async with db.execute(
         """
-        SELECT count FROM level WHERE user_id = ?
+        SELECT count FROM level WHERE user_id = ? AND server = ?
         """,
-        (user_id,),
+        (user_id, server),
     ) as cursor:
         row = await cursor.fetchone()
 
@@ -49,29 +51,40 @@ async def get_user_count(user_id: int) -> int:
     return row[0]
 
 
-async def set_user_count(user_id: int, count: int) -> None:
+async def set_user_count(user_id: int, count: int, server: int) -> None:
     db = await get_db()
 
-    await db.execute(
-        """
-        INSERT INTO level (user_id, count)
-        VALUES (?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET count = ?
-        """,
-        (user_id, count, count),
+    existing_record = await db.execute(
+        "SELECT * FROM level WHERE user_id = ? AND server = ?", (user_id, server)
     )
 
+    existing_record = await existing_record.fetchone()
+
+    if existing_record:
+        await db.execute(
+            "UPDATE level SET count = ? WHERE user_id = ? AND server = ?",
+            (count, user_id, server),
+        )
+    else:
+        await db.execute(
+            "INSERT INTO level (user_id, server, count) VALUES (?, ?, ?)",
+            (user_id, server, count),
+        )
+
+    # 트랜잭션 커밋
     await db.commit()
 
 
-async def get_users() -> tuple[int, int]:
+async def get_users(server: int) -> tuple[int, int]:
     db = await get_db()
 
     async with db.execute(
         """
         SELECT user_id, count FROM level
+        WHERE server = ?
         ORDER BY count DESC
-        """
+        """,
+        (server,),
     ) as cursor:
         rows = await cursor.fetchall()
 
