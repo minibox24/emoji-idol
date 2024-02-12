@@ -45,39 +45,6 @@ async def upload_wakpiece():
 
     try:
         async with aiohttp.ClientSession() as session:
-            # region 왁피스
-
-            async with session.get(
-                "https://api.wakscord.xyz/wakschedule", allow_redirects=False
-            ) as response:
-                location = response.headers["Location"]
-                idx = response.headers["Index"]
-
-            if location != now_wakpiece:
-                now_wakpiece = location
-                image = BytesIO()
-
-                async with session.get(location) as response:
-                    image.write(await response.read())
-
-                image.seek(0)
-
-                if not await is_noticed(location):
-                    await send_webhook(
-                        {
-                            "username": "왁피스 일기장",
-                            "avatar_url": WAKPIECE,
-                            "content": f"https://cafe.naver.com/steamindiegame/{idx}",
-                        },
-                        image,
-                    )
-
-                    await set_noticed(location)
-
-            # endregion
-
-            # region 뱅온정보
-
             async with session.get("https://api.wakscord.xyz/bangon") as response:
                 data = await response.json()
 
@@ -118,8 +85,6 @@ async def upload_wakpiece():
 
                         now_bangon[member] = send_data
                         await set_noticed(send_data)
-
-            # endregion
     except:
         traceback.print_exc()
 
